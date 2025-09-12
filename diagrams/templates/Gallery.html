@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Diagram Studio - Gallery</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://unpkg.com/alpinejs" defer></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+  href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap"
+  rel="stylesheet"
+/>
+
+  <style>
+    body {
+      background-color: #f8fafc;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #111827;
+    }
+
+    select {
+      -webkit-appearance: menulist !important;
+      -moz-appearance: menulist !important;
+      appearance: menulist !important;
+      padding-right: 1rem;
+      background-position: right 0.75rem center;
+      background-repeat: no-repeat;
+    }
+
+    .mermaid {
+      width: 100%;
+      height: 100%;
+    }
+
+    #diagram-display-section {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #fff;
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      display: none;
+    }
+
+    #mermaid-container {
+      min-height: 400px;
+      max-height: 700px;
+      overflow-y: auto;
+    }
+
+    header a,
+    nav a.active,
+    nav a:hover {
+      color: #4f46e5;
+      border-color: #4f46e5;
+    }
+
+    header a:hover {
+      text-decoration: underline;
+    }
+
+    #filter-type,
+    #filter-access {
+      min-width: calc(160px + 1rem + 1rem);
+    }
+
+    .stats-card {
+      background-color: #fff;
+      padding: 1.25rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 0.05);
+      text-align: center;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .stats-value {
+      font-size: 1.875rem;
+      font-weight: 700;
+      margin-top: 0.2rem;
+    }
+
+    .metric-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 0.75rem;
+      margin: auto;
+    }
+
+    .purple-bg {
+      background-color: #ede9fe;
+      color: #7c3aed;
+    }
+
+    .blue-bg {
+      background-color: #dbeafe;
+      color: #256eb8;
+    }
+
+    .red-bg {
+      background-color: #fee2e2;
+      color: #dc2626;
+    }
+
+    .green-bg {
+      background-color: #d1fae5;
+      color: #16a34a;
+    }
+
+    /* Notification dropdown styles */
+    .notification-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 0.5rem;
+      width: 20rem;
+      max-height: 24rem;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.375rem;
+      box-shadow: 0 4px 6px rgb(0 0 0 / 0.1);
+      z-index: 50;
+    }
+
+    .notification-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .notification-item:hover {
+      background-color: #f9fafb;
+    }
+
+    /* User container styles */
+    .user-container {
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 0.75rem;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .user-header {
+      border-bottom: 2px solid #f3f4f6;
+      padding-bottom: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .pencil-text {
+  font-family: "Patrick Hand", cursive;
+  font-size: 3rem;          /* adjust size as needed */
+  color: #4b5563;           /* grayish pencil color */
+  line-height: 1;           /* tighten lines for stacked words */
+}
+
+  </style>
+</head>
+
+<body class="flex flex-col min-h-screen" x-data="{ notifOpen: false }">
+
+  <header class="flex justify-between items-center p-4 bg-white shadow-sm relative">
+    <div class="flex items-center space-x-3">
+      <img
+        src="https://miro.medium.com/v2/resize:fit:1400/format:webp/1*MLo8d61EQrBXEIkVjzKvcA.png"
+        alt="Diagram Studio Logo"
+        class="w-10 h-10 rounded-full shadow-sm"
+      />
+<span class="pencil-text">Diagram Studio</span>
+    </div>
+    <div class="flex items-center space-x-6 text-gray-600 relative">
+      <!-- Notification -->
+      <div class="relative" @click.outside="notifOpen = false">
+        <button @click="notifOpen = !notifOpen" aria-label="Notifications" class="relative focus:outline-none">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" viewBox="0 0 24 24"><path
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-12 0v3.159c0 .538-.214.955-.595 1.436L5 17h5"></path><path d="M13.73 21a2 2 0 01-3.46 0"></path></svg>
+          {% if pending_requests %}
+          <span
+            class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+            {{ pending_requests.count }}
+          </span>
+          {% endif %}
+        </button>
+
+        <div x-show="notifOpen" x-transition class="notification-dropdown" x-cloak>
+          <h3 class="p-3 text-sm font-semibold border-b border-gray-200">Access</h3>
+
+          {% if pending_requests %}
+          {% for req in pending_requests %}
+          <div class="notification-item">
+            <div>
+              <p class="font-medium">{{ req.from_user.username }}</p>
+              <p class="text-xs text-gray-500">has granted you the access of diagrams</p>
+            </div>
+            <div class="flex space-x-2">
+              <form method="post" action="{% url 'handle_request' req.id %}">
+                {% csrf_token %}
+                <button type="submit" name="action" value="accept"
+                  class="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1 rounded">Accept</button>
+              </form>
+              <form method="post" action="{% url 'handle_request' req.id %}">
+                {% csrf_token %}
+                <button type="submit" name="action" value="decline"
+                  class="bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1 rounded">Decline</button>
+              </form>
+            </div>
+          </div>
+          {% endfor %}
+          {% else %}
+          <p class="p-3 text-sm text-gray-500">No pending requests</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <span>Hello, {{ user.username }}</span>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="text-indigo-600 font-semibold hover:text-indigo-800">Logout</button>
+      </form>
+    </div>
+  </header>
+
+  <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 px-6 py-4 border-b border-gray-200 text-gray-700 font-semibold text-sm">
+    <div class="stats-card">
+      <div class="metric-icon purple-bg">
+        <svg class="w-6 h-6" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          viewBox="0 0 24 24">
+          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414z" />
+        </svg>
+      </div>
+      <div>Total Diagrams</div>
+      <div id="stat-total-diagrams" class="stats-value">0</div>
+    </div>
+    
+    <div class="stats-card">
+      <div class="metric-icon green-bg">
+        <svg class="w-6 h-6" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round" viewBox="0 0 24 24">
+          <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          <path d="M12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      </div>
+      <div>My Diagrams</div>
+      <div id="stat-my-diagrams" class="stats-value">{{ own_diagrams.count }}</div>
+    </div>
+    <div class="stats-card">
+      <div class="metric-icon bg-cyan-100 text-cyan-600">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round" viewBox="0 0 24 24">
+          <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      </div>
+      <div>Shared Diagrams</div>
+      <div id="stat-shared-diagrams" class="stats-value">0</div>
+    </div>
+    <div class="stats-card">
+      <div class="metric-icon bg-orange-100 text-orange-600">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round" viewBox="0 0 24 24">
+          <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+        </svg>
+      </div>
+      <div>Collaborators</div>
+      <div id="stat-collaborators" class="stats-value">0</div>
+    </div>
+  </section>
+
+  <nav class="flex border-b border-gray-200 py-4 px-6 space-x-12">
+    <a href="{% url 'gallery' %}" class="font-semibold text-indigo-600 border-b-2 border-indigo-600">Gallery</a>
+    <a href="{% url 'editor' %}" class="hover:text-indigo-600">Editor</a>
+    <a href="{% url 'analytics' %}" class="hover:text-indigo-600">Analytics</a>
+    <a href="{% url 'users' %}" class="hover:text-indigo-600">Users</a>
+    <a href="{% url 'about' %}" class="hover:text-indigo-600">About</a>
+  </nav>
+
+  <main class="flex-grow p-6 space-y-6 overflow-auto">
+
+    <!-- Gallery Header and Buttons -->
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Diagram Gallery</h1>
+        <p class="mt-1 text-gray-500">Browse and manage all your professional diagrams</p>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="openNewDiagram()"
+          class="rounded bg-indigo-100 px-4 py-2 font-semibold text-indigo-700 hover:bg-indigo-200">+ New Diagram</button>
+      </div>
+    </div>
+
+    <section class="flex flex-wrap items-center gap-4 mb-4">
+      <div class="relative flex-grow min-w-[220px] max-w-md">
+        <svg class="absolute left-3 top-1/2 w-5 h-5 text-gray-400 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg"
+          fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M21 21l-6-6m-5 0a7 7 0 117-7 7 7 0 01-7 7z" />
+        </svg>
+        <input id="gallery-search-input" type="search" placeholder="Search diagrams, tags, creators…"
+          class="w-full rounded border border-gray-300 py-2 pl-10 pr-4 shadow-sm focus:ring-indigo-500 focus:ring ring-1 focus:outline-none" />
+      </div>
+      <select id="filter-type" class="rounded border border-gray-300 py-2 px-3 cursor-pointer" onchange="filterDiagrams()">
+        <option value="">All Types</option>
+        <option value="classdiagram">Class</option>
+        <option value="erdiagram">ER</option>
+        <option value="flowchart">Flowchart</option>
+        <option value="sequencediagram">Sequence</option>
+        <option value="gantt">Gantt</option>
+        <option value="pie">Pie</option>
+      </select>
+      <select id="filter-access" class="rounded border border-gray-300 py-2 px-3 cursor-pointer" onchange="filterDiagrams()">
+        <option value="">Any Access</option>
+        <option value="private">Private</option>
+        <option value="group">Group</option>
+        <option value="vertical">Vertical</option>
+        <option value="companywide">Company Wide</option>
+      </select>
+      <select class="rounded border border-gray-300 py-2 px-3 cursor-pointer">
+        <option>Sort: Recent</option>
+        <option>Sort: Popular</option>
+        <option>Sort: Liked</option>
+      </select>
+    </section>
+
+    <div id="gallery-info" class="text-gray-600 text-sm mb-4">Showing 0 of 0 diagrams</div>
+
+    <section id="diagram-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></section>
+
+    {% if accepted_users %}
+    <section class="mt-12">
+      <h3 class="text-2xl font-bold mb-6 px-6">Shared Diagrams</h3>
+      <div class="px-6 space-y-6">
+        {% for user in accepted_users %}
+        <div class="user-container">
+          <div class="user-header">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xl font-bold text-gray-800 flex items-center">
+                <div class="bg-indigo-100 rounded-full p-2 mr-3">
+                  <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
+                {{ user.username }}'s Diagrams
+              </h4>
+              <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm font-medium">
+                {{ user.diagrams.all|length }} diagram{{ user.diagrams.all|length|pluralize }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {% for diagram in user.diagrams.all %}
+            <div onclick="showDiagram('{{ diagram.title|escapejs }}', `{{ diagram.mermaid_code|escapejs }}`)"
+              class="cursor-pointer bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200 p-4 hover:shadow-lg transition-all duration-200 hover:border-indigo-300 flex flex-col justify-between space-y-3">
+              <div class="flex justify-between items-start">
+                <h5 class="text-gray-800 font-semibold text-sm">{{ diagram.title }}</h5>
+                <span class="bg-white border border-blue-200 rounded px-2 py-1 text-xs font-medium text-blue-700">
+                  {{ diagram.visibility }}
+                </span>
+              </div>
+              <p class="text-gray-600 text-xs line-clamp-2">{{ diagram.diagram_data.description|default:"No description available" }}</p>
+              <div class="border-t border-blue-200 pt-2 flex justify-between items-center text-xs text-gray-500">
+                <span>Updated: {{ diagram.updated_at|date:"M d, Y" }}</span>
+                <span class="bg-blue-100 text-blue-600 px-2 py-1 rounded">v1</span>
+              </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full">
+              <div class="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <p class="text-gray-500 text-sm">No shared diagrams found for <span class="font-medium">{{ user.username }}</span></p>
+                <p class="text-gray-400 text-xs mt-1">This user hasn't shared any diagrams yet.</p>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    <section id="diagram-display-section" class="hidden mt-8 p-6 bg-white border border-gray-300 rounded shadow">
+      <h3 id="display-title" class="mb-4 text-lg font-semibold"></h3>
+      <div id="mermaid-container" class="mermaid"></div>
+    </section>
+  </main>
+
+  <script>
+    const currentUser = "{{ user.username }}";
+
+    function getInitials(name) {
+      if (!name) return "";
+      const parts = name.trim().split(/\s+/);
+      return parts.length === 1 ? parts[0][0].toUpperCase() : parts[0][0].toUpperCase() + parts[1][0].toUpperCase();
+    }
+
+    function openNewDiagram() {
+      window.location.href = "{% url 'editor' %}";
+    }
+
+    function filterDiagrams() {
+      const searchInput = document.getElementById('gallery-search-input').value.toLowerCase();
+      const typeFilter = document.getElementById('filter-type').value.toLowerCase();
+      const accessFilter = document.getElementById('filter-access').value.toLowerCase();
+
+      let visibleCount = 0;
+
+      document.querySelectorAll('#diagram-grid > div').forEach(card => {
+        const title = card.dataset.title.toLowerCase();
+        const desc = card.dataset.description.toLowerCase();
+        const type = card.dataset.type.toLowerCase();
+        const access = card.dataset.access.toLowerCase();
+
+        const matchesSearch = !searchInput || title.includes(searchInput) || desc.includes(searchInput);
+        const matchesType = !typeFilter || type === typeFilter;
+        const matchesAccess = !accessFilter || access === accessFilter;
+
+        if (matchesSearch && matchesType && matchesAccess) {
+          card.style.display = '';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      document.getElementById('gallery-info').textContent = `Showing ${visibleCount} of ${document.querySelectorAll('#diagram-grid > div').length}`;
+    }
+
+    async function loadDiagrams() {
+      try {
+        const response = await fetch('/api/diagrams/', { credentials: 'same-origin' });
+        if (!response.ok) throw new Error('Failed to load diagrams');
+        const diagrams = await response.json();
+
+        const grid = document.getElementById('diagram-grid');
+        grid.innerHTML = '';
+
+        for (const diagram of diagrams) {
+          const title = diagram.title || '';
+          const description = diagram.diagram_data?.description || '';
+          const type = diagram.diagram_data?.diagram_type || 'flowchart';
+          const access = diagram.diagram_data?.access || 'private';
+          const code = diagram.mermaid_code || '';
+
+          const card = document.createElement('div');
+          card.className = 'cursor-pointer bg-sky-50 rounded border border-gray-200 p-4 hover:shadow-lg flex flex-col justify-between space-y-3';
+          card.dataset.title = title;
+          card.dataset.description = description;
+          card.dataset.type = type;
+          card.dataset.access = access;
+
+          card.innerHTML = `
+            <div class="flex justify-between items-start">
+              <h3 class="font-semibold text-gray-800">${title}</h3>
+              <div>
+                <span class="bg-gray-100 rounded px-2 py-1 text-xs font-semibold text-gray-800">${type}</span>
+                <span class="bg-gray-200 rounded px-2 py-1 text-xs font-semibold text-gray-700 ml-1">${access}</span>
+              </div>
+            </div>
+            <p class="text-gray-600 text-sm">${description}</p>
+            <div class="border-t border-gray-200 pt-2 flex justify-between items-center text-sm text-gray-500">
+              <div class="flex items-center space-x-2">
+                <div class="bg-blue-200 rounded-full text-blue-700 flex items-center justify-center w-6 h-6 text-xs font-semibold">
+                  ${getInitials(currentUser)}
+                </div>
+                <span>${currentUser}</span>
+              </div>
+              <div class="flex space-x-4 text-gray-400">
+                <div class="flex items-center space-x-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path
+                      d="M15 12a3 3 0 11-6 0 3 3 0 616 0" /></svg>
+                  <span>0</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364 19.682 12.682a4.5 4.5 0 00-6.364-6.364" /></svg>
+                  <span>0</span>
+                </div>
+              </div>
+            </div>
+            <div class="border-t border-gray-200 pt-2 flex justify-between text-xs text-gray-500">
+              <span>${new Date(diagram.updated_at).toLocaleDateString()}</span>
+              <span>v1</span>
+            </div>
+          `;
+
+          card.addEventListener('click', () => showDiagram(title, code));
+          grid.appendChild(card);
+        }
+
+        updateStats();
+        filterDiagrams();
+      }
+      catch (err) {
+        alert('Failed to load diagrams');
+        console.error(err);
+      }
+    }
+
+    function showDiagram(title, code) {
+      const section = document.getElementById('diagram-display-section');
+      const titleElem = document.getElementById('display-title');
+      const container = document.getElementById('mermaid-container');
+
+      titleElem.textContent = title;
+      container.innerHTML = '';
+      const div = document.createElement('div');
+      div.className = 'mermaid';
+      div.textContent = code;
+      container.appendChild(div);
+
+      mermaid.init(undefined, div);
+      section.style.display = 'block';
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function updateStats() {
+      // Count own diagrams
+      const ownDiagrams = document.querySelectorAll('#diagram-grid > div').length;
+      
+      // Count shared diagrams from other users
+      const sharedDiagrams = document.querySelectorAll('.user-container .grid > div:not(.col-span-full)').length;
+      
+      // Count total collaborators
+      const collaborators = document.querySelectorAll('.user-container').length;
+      
+      // Update total diagrams (own + shared)
+      const totalDiagrams = ownDiagrams + sharedDiagrams;
+      
+      // Update all stats
+      document.getElementById('stat-total-diagrams').textContent = totalDiagrams;
+      document.getElementById('stat-my-diagrams').textContent = ownDiagrams;
+      document.getElementById('stat-shared-diagrams').textContent = sharedDiagrams;
+      document.getElementById('stat-collaborators').textContent = collaborators;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDiagrams();
+
+      document.getElementById('gallery-search-input').addEventListener('input', filterDiagrams);
+      document.getElementById('filter-type').addEventListener('change', filterDiagrams);
+      document.getElementById('filter-access').addEventListener('change', filterDiagrams);
+    });
+  </script>
+</body>
+
+</html>

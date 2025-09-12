@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Diagram Studio - Analytics</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+  href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap"
+  rel="stylesheet"
+/>
+
+  <style>
+    body { background-color: #f8fafc; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #111827; }
+    .analytics-card { transition: transform .2s ease-in-out, box-shadow .2s ease-in-out; }
+    .analytics-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,.1); }
+    .metric-icon { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
+
+    .pencil-text {
+  font-family: "Patrick Hand", cursive;
+  font-size: 3rem;          /* adjust size as needed */
+  color: #4b5563;           /* grayish pencil color */
+  line-height: 1;           /* tighten lines for stacked words */
+}
+
+  </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+  <!-- Header -->
+  <header class="flex justify-between items-center p-4 bg-white shadow-sm">
+    <div class="flex items-center space-x-3">
+      <img src="https://miro.medium.com/v2/resize:fit:1400/format:webp/1*MLo8d61EQrBXEIkVjzKvcA.png"
+           alt="Logo" class="w-10 h-10 rounded-full shadow-sm"/>
+<span class="pencil-text">Diagram Studio</span>
+    </div>
+    <div class="flex items-center space-x-4 text-gray-700">
+      <span id="hello-user">Hello, {{ user.username }}!</span>
+      <form method="POST" action="{% url 'logout' %}">{% csrf_token %}
+        <button type="submit" class="text-indigo-600 hover:text-indigo-800 font-semibold">Logout</button>
+      </form>
+    </div>
+  </header>
+
+  <!-- Navigation -->
+  <nav class="flex border-b border-gray-200 py-3 px-6 space-x-12">
+    <a href="{% url 'gallery' %}" class="hover:text-indigo-600">Gallery</a>
+    <a href="{% url 'editor' %}" class="hover:text-indigo-600">Editor</a>
+    <a href="{% url 'analytics' %}" class="font-semibold border-b-2 border-indigo-600 text-indigo-600">Analytics</a>
+    <a href="{% url 'about' %}" class="hover:text-indigo-600">About</a>
+    <a href="{% url 'users' %}" class="hover:text-indigo-600">Users</a>
+  </nav>
+
+  <!-- Analytics Content -->
+  <main class="flex-1 flex flex-col overflow-auto p-6 space-y-6">
+
+    <div class="flex justify-between items-center">
+      <h2 class="text-xl font-extrabold text-gray-900">Analytics Dashboard</h2>
+      <div class="text-sm text-gray-500">Last updated: <span id="last-updated">Just now</span></div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+
+      <!-- Top Diagram Types -->
+      <div class="bg-white p-6 rounded-lg shadow-sm analytics-card border border-gray-200">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">Top Diagram Types</h3>
+          <div class="metric-icon bg-purple-100 text-purple-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          </div>
+        </div>
+        <div id="analytics-top-types" class="space-y-3"></div>
+      </div>
+
+      <!-- Key Metrics -->
+      <div class="bg-white p-6 rounded-lg shadow-sm analytics-card border border-gray-200">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">Key Metrics</h3>
+          <div class="metric-icon bg-blue-100 text-blue-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          </div>
+        </div>
+        <div id="analytics-key-metrics" class="space-y-3"></div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="bg-white p-6 rounded-lg shadow-sm analytics-card border border-gray-200">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">Recent Activity</h3>
+          <div class="metric-icon bg-green-100 text-green-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+        </div>
+        <div id="analytics-recent-activity" class="space-y-3">
+          <p class="text-sm text-gray-600 italic">No recent activity</p>
+        </div>
+      </div>
+
+      <!-- Access Level Distribution -->
+      <div class="bg-white p-6 rounded-lg shadow-sm analytics-card border border-gray-200">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">Access Levels</h3>
+          <div class="metric-icon bg-yellow-100 text-yellow-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          </div>
+        </div>
+        <div id="analytics-access-levels" class="space-y-3 grid grid-cols-2 gap-4"></div>
+      </div>
+
+    </div>
+
+    <!-- Trends & Performance -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+
+      <div class="bg-white p-6 rounded-lg shadow-sm analytics-card border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Usage Trends</h3>
+        <div id="analytics-trends" class="space-y-3"></div>
+      </div>
+
+      <div class="bg-white p-6 rounded-lg shadow-sm analytics-card border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Performance</h3>
+        <div id="analytics-performance" class="space-y-3"></div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    async function fetchDiagrams() {
+      const resp = await fetch('/api/diagrams/', { credentials: 'same-origin' });
+      if (!resp.ok) throw new Error('Failed to load diagrams');
+      return resp.json();
+    }
+
+    function renderTopTypes(diagrams) {
+      const counts = {};
+      diagrams.forEach(d => counts[d.diagram_data.diagram_type] = (counts[d.diagram_data.diagram_type]||0)+1);
+      const total = diagrams.length;
+      const container = document.getElementById('analytics-top-types');
+      container.innerHTML = '';
+      Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([type, cnt])=>{
+        const pct = Math.round(cnt/total*100);
+        container.insertAdjacentHTML('beforeend', `
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600">${type}</span>
+            <div class="flex items-center space-x-2">
+              <div class="w-16 h-2 bg-gray-200 rounded-full">
+                <div class="w-${Math.min(pct,100)} h-2 bg-purple-500 rounded-full"></div>
+              </div>
+              <span class="text-sm font-medium text-gray-700">${pct}%</span>
+            </div>
+          </div>
+        `);
+      });
+    }
+
+    function renderKeyMetrics(diagrams) {
+      const views = diagrams.reduce((sum,d)=>sum+(d.diagram_data.views||0),0);
+      const likes = diagrams.reduce((sum,d)=>sum+(d.diagram_data.likes||0),0);
+      const avgViews = diagrams.length ? Math.round(views/diagrams.length) : 0;
+      const collabRate = 0; // implement if you track shares
+      const active = 0;    // implement if you track active users
+      document.getElementById('analytics-key-metrics').innerHTML = `
+        <div class="flex justify-between"><span class="text-gray-600">Avg. Views/Diagram</span><span class="font-semibold text-gray-800">${avgViews}</span></div>
+        <div class="flex justify-between"><span class="text-gray-600">Collaboration Rate</span><span class="font-semibold text-gray-800">${collabRate}%</span></div>
+        <div class="flex justify-between"><span class="text-gray-600">Active This Week</span><span class="font-semibold text-gray-800">${active}</span></div>
+      `;
+    }
+
+    function renderAccessLevels(diagrams) {
+      const counts = { private:0, group:0, vertical:0, "company-wide":0 };
+      diagrams.forEach(d=>counts[d.diagram_data.access]++);
+      const total = diagrams.length;
+      const container = document.getElementById('analytics-access-levels');
+      container.innerHTML = '';
+      Object.entries(counts).forEach(([level, cnt])=>{
+        const pct = total?Math.round(cnt/total*100):0;
+        container.insertAdjacentHTML('beforeend', `
+          <div class="text-center p-4 bg-gray-50 rounded-lg">
+            <div class="text-2xl font-bold text-gray-800">${cnt}</div>
+            <div class="text-sm text-gray-600">${level}</div>
+            <div class="text-xs text-gray-400">${pct}% of total</div>
+          </div>
+        `);
+      });
+    }
+
+    function renderTrends(diagrams) {
+      // placeholder
+      document.getElementById('analytics-trends').innerHTML = `
+        <div class="flex justify-between"><span>This Week</span><span>0 diagrams</span></div>
+        <div class="flex justify-between"><span>This Month</span><span>0 diagrams</span></div>
+        <div class="flex justify-between"><span>Total Created</span><span>${diagrams.length} diagrams</span></div>
+      `;
+    }
+
+    function renderPerformance(diagrams) {
+      document.getElementById('analytics-performance').innerHTML = `
+        <div class="flex justify-between"><span>Most Viewed</span><span>–</span></div>
+        <div class="flex justify-between"><span>Most Liked</span><span>–</span></div>
+        <div class="flex justify-between"><span>Latest Update</span><span>–</span></div>
+      `;
+    }
+
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      document.getElementById('last-updated').textContent = new Date().toLocaleString();
+      try {
+        const diagrams = await fetchDiagrams();
+        renderTopTypes(diagrams);
+        renderKeyMetrics(diagrams);
+        renderAccessLevels(diagrams);
+        renderTrends(diagrams);
+        renderPerformance(diagrams);
+      } catch (e) {
+        console.error(e);
+      }
+    });
+  </script>
+</body>
+</html>
