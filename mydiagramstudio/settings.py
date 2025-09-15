@@ -10,7 +10,7 @@ SECRET_KEY = '7l%p^8!6tksbd8d4!u(fy3rf&$&&7x25%_g@0h&7(91e&#&s*u'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [*]
 
 # Application definition
 INSTALLED_APPS = [
@@ -111,3 +111,4 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+
