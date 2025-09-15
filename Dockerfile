@@ -12,7 +12,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     build-essential \
     default-libmysqlclient-dev \
-    pkg-config \   # Add pkg-config to avoid mysqlclient build issues
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
